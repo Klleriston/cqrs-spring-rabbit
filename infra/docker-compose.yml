@@ -1,0 +1,27 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: beautique-db
+    environment:
+      POSTGRES_USER: beautique
+      POSTGRES_PASSWORD: beautique
+      POSTGRES_DB: beautique
+    volumes:
+      - db-beautique:/var/lib/postgresql/data
+      - ./init-beautique-schema.sql:/docker-entrypoint-initdb.d/init-beautique-schema.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - beautique_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U beautique -d beautique"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  beautique_network:
+    driver: bridge
+
+volumes:
+  db-beautique:

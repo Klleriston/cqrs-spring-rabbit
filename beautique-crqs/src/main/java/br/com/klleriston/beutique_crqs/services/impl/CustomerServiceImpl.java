@@ -3,6 +3,7 @@ package br.com.klleriston.beutique_crqs.services.impl;
 import br.com.klleriston.beutique_crqs.dtos.CustomerDTO;
 import br.com.klleriston.beutique_crqs.entitites.CustomerEntity;
 import br.com.klleriston.beutique_crqs.repositories.CustomerRepository;
+import br.com.klleriston.beutique_crqs.services.BrokerService;
 import br.com.klleriston.beutique_crqs.services.CustomerService;
 import br.com.klleriston.beutique_crqs.utils.ConverterUtil;
 import jakarta.transaction.Transactional;
@@ -16,6 +17,9 @@ public class CustomerServiceImpl implements CustomerService {
     @Autowired
     private CustomerRepository customerRepository;
 
+    @Autowired
+    private BrokerService brokerService;
+
     private final ConverterUtil<CustomerEntity, CustomerDTO> converterUtil = new ConverterUtil<>(CustomerEntity.class, CustomerDTO.class);
 
     @Override
@@ -23,6 +27,7 @@ public class CustomerServiceImpl implements CustomerService {
     public CustomerDTO create(CustomerDTO customerDTO) {
         CustomerEntity customerEntity = converterUtil.convertToSource(customerDTO);
         CustomerEntity savedCustomerEntity = customerRepository.save(customerEntity);
+        sendCustomerToQueue(savedCustomerEntity);
         return converterUtil.convertToTarget(savedCustomerEntity);
     }
 
@@ -44,6 +49,19 @@ public class CustomerServiceImpl implements CustomerService {
        CustomerEntity customerEntity = converterUtil.convertToSource(customerDTO);
        customerEntity.setAppointments(customerEntityOptional.get().getAppointments());
        customerEntity.setCreatedAt(customerEntityOptional.get().getCreatedAt());
-       return converterUtil.convertToTarget(this.customerRepository.save(customerEntity));
+       CustomerDTO updatedCustomerDTO = converterUtil.convertToTarget(this.customerRepository.save(customerEntity));
+       sendCustomerToQueue(customerEntity);
+       return updatedCustomerDTO;
+    }
+
+    private void sendCustomerToQueue(CustomerEntity customerEntity) {
+        CustomerDTO customerDTO = CustomerDTO.builder()
+                .id(customerEntity.getId())
+                .firstName(customerEntity.getFirstName())
+                .phone(customerEntity.getPhone())
+                .email(customerEntity.getEmail())
+                .build();
+
+        brokerService.send("customer", customerDTO);
     }
 }

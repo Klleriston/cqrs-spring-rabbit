@@ -22,23 +22,23 @@ public class RabbitMqTopicConfig {
     }
 
     @Bean
-    Binding bindingCustomer(Queue customerQueue, TopicExchange exchange) {
-        return BindingBuilder.bind(customerQueue).to(exchange).with("customer.#");
-    }
-
-    @Bean
     public Queue beautyProceduresQueue() {
         return new Queue("beautyProceduresQueue", true);
     }
 
     @Bean
-    Binding bindingBeautyProcedures(Queue beautyProceduresQueue, TopicExchange exchange) {
-        return BindingBuilder.bind(beautyProceduresQueue).to(exchange).with("beautyProcedures.#");
+    public Queue AppointmentsQueue() {
+        return new Queue("appointmentsQueue", true);
     }
 
     @Bean
-    public Queue AppointmentsQueue() {
-        return new Queue("appointmentsQueue", true);
+    Binding bindingCustomer(Queue customerQueue, TopicExchange exchange) {
+        return BindingBuilder.bind(customerQueue).to(exchange).with("customer.#");
+    }
+
+    @Bean
+    Binding bindingBeautyProcedures(Queue beautyProceduresQueue, TopicExchange exchange) {
+        return BindingBuilder.bind(beautyProceduresQueue).to(exchange).with("beautyProcedures.#");
     }
 
     @Bean
